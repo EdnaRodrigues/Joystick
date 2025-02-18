@@ -131,6 +131,20 @@ int main() {
 
         printf("X: %d (%d) = %d, Y: %d (%d) = %d\n", x, adc_value_x, level_x, y, adc_value_y, level_y); // Imprime as coordenadas do quadrado e os valores dos eixos X e Y
 
+        ssd1306_fill(&ssd, 0); // Limpa o display
+
+        // Desenha sempre os retângulos com essas características
+        ssd1306_rect(&ssd, 1, 1, 126, 62, 1, 0);
+        ssd1306_rect(&ssd, 3, 3, 122, 58, 1, 0);
+        // Desenha os retângulos caso o botão do Joystick seja pressionado
+        ssd1306_rect(&ssd, 2, 2, 124, 60, borda, 0);
+        ssd1306_rect(&ssd, 0, 0, 128, 64, borda, 0);
+        // Quadrado controlado pelas coordenadas de X e Y
+        ssd1306_rect(&ssd, y, x, 8, 8, 1, 1);
+
+        ssd1306_send_data(&ssd); // Atualiza o display
+
+        sleep_ms(100); // Aguarda 100ms para não sobrecarregar a CPU
 
         }
 }

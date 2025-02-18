@@ -1,14 +1,22 @@
 #include <stdio.h> // Biblioteca padrão da linguagem C
 #include "pico/stdlib.h" // Subconjunto central de bibliotecas do SDK Pico
-#include "hardware/pwm.h" //biblioteca para controlar o hardware de PWM
+#include "hardware/pwm.h" // Biblioteca para controle do PWM
+#include "hardware/adc.h" // Biblioteca para controle da conversão ADC
+#include "hardware/i2c.h" // Biblioteca para controle da comunicação I2C
+#include "include/ssd1306.h" // Biblioteca para controle do display OLED
+#include "pico/bootrom.h" // Biblioteca para controle do bootrom
 
 #define GREEN 11 // Pino conectado ao LED verde
 #define BLUE 12 // Pino conectado ao LED azul
 #define RED 13 // Pino conectado ao LED vermelho
+#define A_BUTTON 5 // Pino conectado ao botão A
+#define B_BUTTON 6 // Pino conectado ao botão B
 #define JOY_BUTTON 22 // Pino conectado ao botão do joystick
+#define DIVIDER 19.0 // Divisor do clock para o PWM
 #define WRAP 65519 // Valor máximo do contador sendo 65520
-#define DIVIDER 16.0 // Divisor do clock para o PWM
 uint slice_red, slice_blue; // Declaração dos slices dos canais PWM
+uint16_t adc_value_x, adc_value_y;
+uint16_t x = 60, y = 28; // Variáveis para armazenar as coordenadas do quadrado
 uint16_t level_x = 0, level_y = 0; // Declaração das variáveis de níveis iniciais do PWM
 
 void pwm_setup(uint led, uint *slice, uint16_t level) { 

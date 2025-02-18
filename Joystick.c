@@ -19,6 +19,13 @@ uint16_t adc_value_x, adc_value_y;
 uint16_t x = 60, y = 28; // Variáveis para armazenar as coordenadas do quadrado
 uint16_t level_x = 0, level_y = 0; // Declaração das variáveis de níveis iniciais do PWM
 
+// Definições da comunicação I2C
+#define I2C_PORT i2c1
+#define I2C_SDA 14
+#define I2C_SCL 15
+#define address 0x3C
+ssd1306_t ssd; // Inicializa a estrutura do display para todas as funções
+
 void pwm_setup(uint led, uint *slice, uint16_t level) { 
     gpio_set_function(led, GPIO_FUNC_PWM); // Habilitar o pino do LED como PWM
     *slice = pwm_gpio_to_slice_num(led); // Obtem o canal PWM da GPIO
@@ -31,6 +38,22 @@ void pwm_setup(uint led, uint *slice, uint16_t level) {
 int main() {
     stdio_init_all(); // Inicializa o sistema padrão de I/O
 
+    
+    // Inicialização da comunicação I2C. Utilizando a frequência de 400Khz.
+    i2c_init(I2C_PORT, 400*1000);
+    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);  // Configura o pino para I2C
+    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C); // Configura o pino para I2C
+    gpio_pull_up(I2C_SDA);
+    gpio_pull_up(I2C_SCL);
+    ssd1306_init(&ssd, WIDTH, HEIGHT, false, address, I2C_PORT); // Inicializa o display
+    ssd1306_config(&ssd); // Configura o display
+    ssd1306_send_data(&ssd); // Envia os dados para o display
+    
+    // Limpa o display. O display inicia com todos os pixels apagados.
+    ssd1306_fill(&ssd, false);
+    ssd1306_send_data(&ssd);
+    
+    // Configuração das saídas PWM
     pwm_setup(RED, &slice_red, level_x); // Configura o LED vermelho como PWM
     pwm_setup(BLUE, &slice_blue, level_y); // Configura o LED azul como PWM
 

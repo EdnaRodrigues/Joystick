@@ -12,6 +12,8 @@
 #define A_BUTTON 5 // Pino conectado ao botão A
 #define B_BUTTON 6 // Pino conectado ao botão B
 #define JOY_BUTTON 22 // Pino conectado ao botão do joystick
+#define JOY_X 27 // Pino conectado ao eixo X do joystick
+#define JOY_Y 26 // Pino conectado ao eixo Y do joystick
 #define DIVIDER 19.0 // Divisor do clock para o PWM
 #define WRAP 65519 // Valor máximo do contador sendo 65520
 uint slice_red, slice_blue; // Declaração dos slices dos canais PWM
@@ -81,6 +83,10 @@ int main() {
     gpio_set_irq_enabled_with_callback(B_BUTTON, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // Configura a interrupção do botão B
     gpio_set_irq_enabled_with_callback(JOY_BUTTON, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // Configura a interrupção do botão do Joystick
 
+    adc_init(); // Inicializa o ADC
+    adc_gpio_init(JOY_X); // Inicializa o pino do eixo X do Joystick
+    adc_gpio_init(JOY_Y); // Inicializa o pino do eixo Y do Joystick
+
     // Inicialização da comunicação I2C. Utilizando a frequência de 400Khz.
     i2c_init(I2C_PORT, 400*1000);
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);  // Configura o pino para I2C
@@ -100,7 +106,31 @@ int main() {
     pwm_setup(BLUE, &slice_blue, level_y); // Configura o LED azul como PWM
 
     while (true) {
-        printf("Hello, world!\n");
-        sleep_ms(1000);
-    }
+        adc_select_input(0); // Seleciona o canal 0 do ADC, que corresponde ao pino do eixo Y do Joystick
+        adc_value_y = adc_read(); // Realiza a leitura do valor do eixo Y do Joystick
+        adc_select_input(1); // Seleciona o canal 1 do ADC, que corresponde ao pino do eixo X do Joystick
+        adc_value_x = adc_read(); // Realiza a leitura do valor do eixo X do Joystick
+        x = 4 + (adc_value_x * 120) / 4095; // Calcula a posição do quadrado no eixo X, sendo 120 o tamanho disponível no display e 4 o valor inicial após as bordas
+        y = 52 - (adc_value_y * 52) / 4095; // Calcula a posição do quadrado no eixo Y, sendo 52 o tamanho disponível para movimento no display e 52 o valor inicial antes das bordas
+
+        // Calcula o ciclo de trabalho do PWM do LED vermelho de acordo com o eixo X e do LED azul de acordo com o eixo Y
+        if (x >= 4 && x < 60) {
+            level_x = 70200 - 1170*x; 
+        } else if (x >= 60 && x <= 116) {
+            level_x = 1170*x - 70200;
+        }
+        
+        if (y >= 4 && y < 28) {
+            level_y = 76440 - 2730*y; 
+        } else if (y >= 28 && y <= 52) {
+            level_y = 2730*y - 76440;
+        }
+
+        pwm_set_gpio_level(slice_blue, level_y); // Ajusta o brilho do LED azul com o valor do eixo Y
+        pwm_set_gpio_level(slice_red, level_x); // Ajusta o brilho do LED vermelho com o valor do eixo X
+
+        printf("X: %d (%d) = %d, Y: %d (%d) = %d\n", x, adc_value_x, level_x, y, adc_value_y, level_y); // Imprime as coordenadas do quadrado e os valores dos eixos X e Y
+
+
+        }
 }

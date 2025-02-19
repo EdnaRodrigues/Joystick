@@ -63,10 +63,6 @@ int main() {
     
     gpio_init(GREEN); // Inicializa o pino do LED verde
     gpio_set_dir(GREEN, GPIO_OUT); // Configura o pino do LED verde como saída
-    gpio_init(BLUE); // Inicializa o pino do LED azul
-    gpio_set_dir(BLUE, GPIO_OUT); // Configura o pino do LED azul como saída
-    gpio_init(RED); // Inicializa o pino do LED vermelho
-    gpio_set_dir(RED, GPIO_OUT); // Configura o pino do LED vermelho como saída
 
     gpio_init(A_BUTTON); // Inicializa o pino do botão A
     gpio_set_dir(A_BUTTON, GPIO_IN); // Configura o pino do botão A como entrada
@@ -82,11 +78,7 @@ int main() {
     gpio_set_irq_enabled_with_callback(A_BUTTON, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // Configura a interrupção do botão A
     gpio_set_irq_enabled_with_callback(B_BUTTON, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // Configura a interrupção do botão B
     gpio_set_irq_enabled_with_callback(JOY_BUTTON, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // Configura a interrupção do botão do Joystick
-
-    adc_init(); // Inicializa o ADC
-    adc_gpio_init(JOY_X); // Inicializa o pino do eixo X do Joystick
-    adc_gpio_init(JOY_Y); // Inicializa o pino do eixo Y do Joystick
-
+    
     // Inicialização da comunicação I2C. Utilizando a frequência de 400Khz.
     i2c_init(I2C_PORT, 400*1000);
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);  // Configura o pino para I2C
@@ -101,6 +93,10 @@ int main() {
     ssd1306_fill(&ssd, false);
     ssd1306_send_data(&ssd);
     
+    adc_init(); // Inicializa o ADC
+    adc_gpio_init(JOY_X); // Inicializa o pino do eixo X do Joystick
+    adc_gpio_init(JOY_Y); // Inicializa o pino do eixo Y do Joystick
+
     // Configuração das saídas PWM
     pwm_setup(RED, &slice_red, level_x); // Configura o LED vermelho como PWM
     pwm_setup(BLUE, &slice_blue, level_y); // Configura o LED azul como PWM
@@ -110,8 +106,8 @@ int main() {
         adc_value_y = adc_read(); // Realiza a leitura do valor do eixo Y do Joystick
         adc_select_input(1); // Seleciona o canal 1 do ADC, que corresponde ao pino do eixo X do Joystick
         adc_value_x = adc_read(); // Realiza a leitura do valor do eixo X do Joystick
-        x = 4 + (adc_value_x * 120) / 4095; // Calcula a posição do quadrado no eixo X, sendo 120 o tamanho disponível no display e 4 o valor inicial após as bordas
-        y = 52 - (adc_value_y * 52) / 4095; // Calcula a posição do quadrado no eixo Y, sendo 52 o tamanho disponível para movimento no display e 52 o valor inicial antes das bordas
+        x = 4 + 8*(adc_value_x/278); // Calcula a posição do quadrado no eixo X
+        y = 52 - 8*(adc_value_y/586); // Calcula a posição do quadrado no eixo Y
 
         // Calcula o ciclo de trabalho do PWM do LED vermelho de acordo com o eixo X e do LED azul de acordo com o eixo Y
         if (x >= 4 && x < 60) {
@@ -126,8 +122,8 @@ int main() {
             level_y = 2730*y - 76440;
         }
 
-        pwm_set_gpio_level(slice_blue, level_y); // Ajusta o brilho do LED azul com o valor do eixo Y
-        pwm_set_gpio_level(slice_red, level_x); // Ajusta o brilho do LED vermelho com o valor do eixo X
+        pwm_set_gpio_level(BLUE, level_y); // Ajusta o brilho do LED azul com o valor do eixo Y
+        pwm_set_gpio_level(RED, level_x); // Ajusta o brilho do LED vermelho com o valor do eixo X
 
         printf("X: %d (%d) = %d, Y: %d (%d) = %d\n", x, adc_value_x, level_x, y, adc_value_y, level_y); // Imprime as coordenadas do quadrado e os valores dos eixos X e Y
 

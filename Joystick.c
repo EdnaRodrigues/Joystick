@@ -46,8 +46,8 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
       last_time = current_time; //Atualiza o tempo do último evento
       if (gpio == A_BUTTON) {
         pwm_on = !pwm_on; // Inverte o estado do PWM
-        pwm_set_enabled(slice_blue, !pwm_on); // Muda o estado de ativação do PWM do LED azul
-        pwm_set_enabled(slice_red, !pwm_on); // Muda o estado de ativação do PWM do LED vermelho
+        pwm_set_enabled(slice_blue, pwm_on); // Muda o estado de ativação do PWM do LED azul
+        pwm_set_enabled(slice_red, pwm_on); // Muda o estado de ativação do PWM do LED vermelho
       } else if (gpio == B_BUTTON) {
           reset_usb_boot(0,0); //Habilita o modo de gravação do microcontrolador
         } else if (gpio == JOY_BUTTON) {
